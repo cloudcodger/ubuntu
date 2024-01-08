@@ -1,0 +1,12 @@
+---
+# tasks file for netboot_xyz
+- name: Install tftpd-hpa.
+  ansible.builtin.package:
+    name: tftpd-hpa
+    state: present
+
+- name: Download netboot.xyz files.
+  ansible.builtin.get_url:
+    url: "{{ item.url }}"
+    dest: "{{ netboot_xyz_tftp_base_dir }}/{{ item.name }}"
+  loop: "{{ netboot_xyz_files }}"

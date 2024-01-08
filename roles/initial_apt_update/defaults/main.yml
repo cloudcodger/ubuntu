@@ -1,0 +1,4 @@
+---
+# defaults file for initial_apt_update
+
+initial_apt_update_reboot_flag_file: "{{ ansible_facts.env.PWD }}/.ansible/initial_apt_update_flag"

@@ -1,0 +1,22 @@
+---
+namespace: cloudcodger
+name: ubuntu
+version: 1.0.0
+readme: README.md
+authors:
+  - Cloud Codger <cloudcodger@pm.me>
+
+description: Roles for the implementation of various services on the Ubuntu operating system.
+
+license:
+  - GPL-2.0-or-later
+
+tags:
+  - infrastructure
+
+dependencies: {}
+repository: https://github.com/cloudcodger/ubuntu
+documentation: https://github.com/cloudcodger/ubuntu
+homepage: https://github.com/cloudcodger/ubuntu
+issues: https://github.com/cloudcodger/ubuntu/issues
+build_ignore: []

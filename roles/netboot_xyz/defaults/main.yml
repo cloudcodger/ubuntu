@@ -1,0 +1,11 @@
+---
+# defaults file for netboot_xyz
+netboot_xyz_tftp_base_dir: /srv/tftp
+
+netboot_xyz_files:
+  - name: netboot.xyz-arm64.efi
+    url: https://boot.netboot.xyz/ipxe/netboot.xyz-arm64.efi
+  - name: netboot.xyz.efi
+    url: https://boot.netboot.xyz/ipxe/netboot.xyz.efi
+  - name: netboot.xyz.kpxe
+    url: https://boot.netboot.xyz/ipxe/netboot.xyz.kpxe

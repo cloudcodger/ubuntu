@@ -1,0 +1,27 @@
+---
+# tasks file for initial_apt_update
+- name: Touch initial_apt_update_flag file.
+  ansible.builtin.file:
+    access_time: preserve
+    modification_time: preserve
+    mode: "0644"
+    path: "{{ initial_apt_update_reboot_flag_file }}"
+    state: touch
+  register: first_run_reboot_flag
+
+- name: Upgrade the OS (apt-get dist-upgrade) when flag was added.
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: dist
+  when: first_run_reboot_flag.changed
+
+- name: Check if a reboot is required.
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: reboot_required_file
+
+- name: Reboot the server if required and never done.
+  ansible.builtin.reboot:
+  when:
+    - reboot_required_file.stat.exists
+    - first_run_reboot_flag.changed

@@ -1,0 +1,80 @@
+---
+# tasks file for apt_mirror
+- name: Install apt-mirror package.
+  ansible.builtin.apt:
+    pkg: apt-mirror
+
+- name: Create a apt-mirror root owned directories.
+  ansible.builtin.file:
+    path: "{{ apt_mirror_base_path }}/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - dump
+    - private
+    - template
+
+- name: Create a apt-mirror owned directories.
+  ansible.builtin.file:
+    path: "{{ apt_mirror_base_path }}/{{ item }}"
+    state: directory
+    owner: apt-mirror
+    group: apt-mirror
+    mode: "0755"
+  loop:
+    - mirror
+    - skel
+    - var
+
+- name: Update the apt-mirror 'mirror.list' file.
+  ansible.builtin.template:
+    src: mirror.list.j2
+    dest: /etc/apt/mirror.list
+
+- name: Install the patched apt-mirror perl script.
+  ansible.builtin.copy:
+    dest: /usr/bin/apt-mirror
+    src: apt-mirror
+    mode: "0755"
+    group: "root"
+    owner: "root"
+  when: apt_mirror_install_patched_executable
+
+- name: Install NGINX package.
+  ansible.builtin.apt:
+    pkg: nginx
+  when: apt_mirror_nginx_add_site
+
+- name: Disable the NGINX default site.
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reload nginx
+  when: apt_mirror_nginx_disable_defaults
+
+- name: Remove the NGINX default index files.
+  ansible.builtin.file:
+    path: "{{ apt_mirror_nginx_server_root }}/{{ item }}"
+    state: absent
+  loop: "{{ apt_mirror_nginx_default_indexes }}"
+  when: apt_mirror_nginx_disable_defaults
+
+- name: Add NGINX apt-mirror default index file.
+  ansible.builtin.template:
+    dest: /var/www/html/index.html
+    src: index.html.j2
+
+- name: Add NGINX apt-mirror site.
+  ansible.builtin.template:
+    dest: "/etc/nginx/sites-available/{{ apt_mirror_nginx_site_name }}"
+    src: site_config.j2
+  notify: Reload nginx
+  when: apt_mirror_nginx_add_site
+
+- name: Enable NGINX apt-mirror site.
+  ansible.builtin.file:
+    dest: "/etc/nginx/sites-enabled/{{ apt_mirror_nginx_site_name }}"
+    src: "../sites-available/{{ apt_mirror_nginx_site_name }}"
+    state: link
+  notify: Reload nginx
+  when: apt_mirror_nginx_add_site

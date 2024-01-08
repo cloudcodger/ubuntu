@@ -1,0 +1,20 @@
+server {
+    listen 80{{ ' default_server' if apt_mirror_nginx_default_server }};
+    listen [::]:80{{ ' default_server' if apt_mirror_nginx_default_server }};
+
+    root {{ apt_mirror_nginx_server_root }};
+    index {{ apt_mirror_nginx_server_index }};
+    server_name {{ apt_mirror_nginx_server_name }};
+
+	location / {
+		# First attempt to serve request as file, then
+		# as directory, then fall back to displaying a 404.
+		try_files $uri $uri/ =404;
+	}
+{% for location in apt_mirror_nginx_locations %}
+
+	location {{ location.name }} {
+		alias {{ location.alias }};
+	}
+{% endfor %}
+}

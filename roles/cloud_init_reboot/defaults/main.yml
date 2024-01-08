@@ -1,0 +1,4 @@
+---
+# defaults file for cloud_init_reboot
+
+cloud_init_reboot_flag_file: "{{ ansible_facts.env.PWD }}/.ansible/cloud_init_reboot_check"
