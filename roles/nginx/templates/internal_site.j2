@@ -1,0 +1,9 @@
+server {
+	listen 80{{ ' default_server' if nginx_internal_site_is_default_site }};
+	listen [::]:80{{ ' default_server' if nginx_internal_site_is_default_site }};
+
+	root /var/www/{{ inventory_hostname }};
+	index {{ nginx_internal_site_server_index }};
+
+	server_name {{  nginx_internal_site_server_name }};
+}

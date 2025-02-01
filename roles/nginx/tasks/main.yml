@@ -1,0 +1,46 @@
+---
+- name: Install NGINX package.
+  ansible.builtin.apt:
+    pkg: nginx
+    cache_valid_time: 3600
+
+- name: Enable and start nginx.
+  ansible.builtin.systemd:
+    name: nginx
+    enabled: true
+    state: started
+
+- name: Disable the NGINX installation default site.
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reload nginx
+  when: nginx_disable_default_site
+
+- name: Create the base directory.
+  ansible.builtin.file:
+    path: "{{ nginx_base }}"
+    state: directory
+    mode: "0755"
+
+- name: Include the internal_only tasks.
+  ansible.builtin.include_tasks: 'internal_only.yml'
+  when: nginx_internal_site_apply
+
+# The default for nginx_balancer_sites is an empty list for the loop
+# and the tasks would not get included.
+- name: Include the balancer tasks.
+  ansible.builtin.include_tasks: 'balancer.yml'
+  loop: "{{ nginx_balancer_sites }}"
+  loop_control:
+    label: "{{ nginx_balancer.name }}"
+    loop_var: nginx_balancer
+
+# The default for nginx_cloud_config_sites is an empty list for the loop
+# and the tasks would not get included.
+- name: Include the cloud_config tasks.
+  ansible.builtin.include_tasks: 'cloud_config.yml'
+  loop: "{{ nginx_cloud_config_sites }}"
+  loop_control:
+    label: "{{ nginx_config.name }}"
+    loop_var: nginx_config

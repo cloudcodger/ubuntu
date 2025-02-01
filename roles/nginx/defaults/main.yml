@@ -1,0 +1,62 @@
+---
+nginx_base: /var/www
+nginx_disable_default_site: true
+
+nginx_cloud_config_sites: []
+nginx_user_data: ""
+nginx_user_data_ssh_allow_pw: true
+nginx_user_data_ssh_authorized_keys: ""
+nginx_user_data_late_commands: |-
+  - echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /target/etc/sudoers.d/ubuntu
+  - update-alternatives --set editor /usr/bin/vim.tiny
+nginx_user_data_network: |-
+  version: 2
+  ethernets:
+    ens18: {dhcp4: true}
+nginx_user_data_packages: ""
+
+nginx_internal_site_apply: false
+nginx_internal_site_is_default_site: true
+nginx_internal_site_message: |
+  This site is not intended to be accessed via a web browser.
+nginx_internal_site_server_index: "index.html index.htm"
+nginx_internal_site_server_name: _ # catch-all server
+
+nginx_balancer_sites: []
+
+nginx_user_data_storage_config: |-
+  - {id: disk-sda, type: disk, ptable: gpt, wipe: superblock, grub_device: true}
+
+  - {id: partition-0, type: partition, number: 1, device: disk-sda, flag: bios_grub, size: 1M}
+
+  - {id: partition-1, type: partition, number: 2, device: disk-sda, size: 1G}
+  - {id: format-0, type: format, fstype: ext4, volume: partition-1} # boot
+  - {device: format-0, path: /boot, type: mount, id: mount-0}
+
+  - {id: partition-2, type: partition, number: 3, device: disk-sda, size: -1}
+
+  - {id: lvm_volgroup-0, type: lvm_volgroup, name: vg0, devices: [partition-2], preserve: false}
+
+  - {id: lvm_partition-0, type: lvm_partition, name: root, volgroup: lvm_volgroup-0, size: 10G}
+  - {id: format-1, type: format, fstype: ext4, volume: lvm_partition-0}
+  - {device: format-1, path: /, type: mount, id: mount-1}
+
+  - {id: lvm_partition-1, type: lvm_partition, name: tmp, volgroup: lvm_volgroup-0, size: 1G}
+  - {id: format-2, type: format, fstype: ext4, volume: lvm_partition-1}
+  - {device: format-2, path: /tmp, type: mount, id: mount-2}
+
+  - {id: lvm_partition-2, type: lvm_partition, name: home, volgroup: lvm_volgroup-0, size: 2G}
+  - {id: format-3, type: format, fstype: ext4, volume: lvm_partition-2}
+  - {device: format-3, path: /home, type: mount, id: mount-3}
+
+  - {id: lvm_partition-3, type: lvm_partition, name: opt, volgroup: lvm_volgroup-0, size: 2G}
+  - {id: format-4, type: format, fstype: ext4, volume: lvm_partition-3}
+  - {device: format-4, path: /opt, type: mount, id: mount-4}
+
+  - {id: lvm_partition-4, type: lvm_partition, name: var_tmp, volgroup: lvm_volgroup-0, size: 4G}
+  - {id: format-5, type: format, fstype: ext4, volume: lvm_partition-4}
+  - {device: format-5, path: /var/tmp, type: mount, id: mount-5}
+
+  - {id: lvm_partition-5, type: lvm_partition, name: var_log, volgroup: lvm_volgroup-0, size: 2G}
+  - {id: format-6, type: format, fstype: ext4, volume: lvm_partition-5}
+  - {device: format-6, path: /var/log, type: mount, id: mount-6}

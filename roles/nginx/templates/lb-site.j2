@@ -1,0 +1,25 @@
+upstream {{ nginx_balancer.name }} {
+    least_conn;
+{% for backend in nginx_balancer.backends %}
+    server {{ backend }};
+{% endfor %}
+}
+
+server {
+	access_log /dev/null;
+	listen {{ nginx_balancer.listen_port | default('80') }};
+	server_name {{  nginx_balancer.server_name | default(inventory_hostname) }};
+
+	location / {
+{% if nginx_balancer.disable_chunked_encoding is defined and nginx_balancer.disable_chunked_encoding %}
+		chunked_transfer_encoding off;
+{% endif %}
+{% if nginx_balancer.http_version is defined %}
+		proxy_http_version {{ nginx_balancer.http_version }};
+{% endif %}
+		proxy_pass http://{{ nginx_balancer.name }};
+{% for header in nginx_balancer.headers | default([]) %}
+		proxy_set_header {{ header }};
+{% endfor %}
+	}
+}

@@ -1,0 +1,31 @@
+---
+- name: Create the minio-user.
+  ansible.builtin.user:
+    name: minio-user
+    create_home: true
+
+- name: Get and install the minio executable.
+  ansible.builtin.apt:
+    deb: https://dl.min.io/server/minio/release/linux-amd64/archive/minio.deb
+  notify: Restart minio
+
+- name: Create the minio data directory.
+  ansible.builtin.file:
+    path: "{{ minio_data_dir }}"
+    state: directory
+    owner: minio-user
+    group: minio-user
+    mode: "0755"
+
+- name: Create the loadbalancer site.
+  ansible.builtin.template:
+    dest: /etc/default/minio
+    src: minio_defaults.j2
+    mode: "0644"
+  notify: Restart minio
+
+- name: Enable start the minio service.
+  ansible.builtin.service:
+    name: minio
+    enabled: true
+    state: started

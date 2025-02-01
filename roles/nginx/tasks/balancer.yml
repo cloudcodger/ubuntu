@@ -1,0 +1,22 @@
+---
+- name: Validate loadbalancers have required values.
+  ansible.builtin.assert:
+    that:
+      - nginx_balancer.name is defined
+      - nginx_balancer.name | length > 1
+      - nginx_balancer.backends | length > 1
+    quiet: true
+
+- name: Create the loadbalancer site.
+  ansible.builtin.template:
+    dest: "/etc/nginx/sites-available/{{ nginx_balancer.name }}"
+    src: lb-site.j2
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Enable the loadbalancer site.
+  ansible.builtin.file:
+    dest: "/etc/nginx/sites-enabled/{{ nginx_balancer.name }}"
+    src: "../sites-available/{{ nginx_balancer.name }}"
+    state: link
+  notify: Reload nginx

@@ -1,0 +1,23 @@
+vrrp_instance VI_1 {
+  state {{ 'MASTER' if inventory_hostname in groups['keepalived_primary'] else 'BACKUP' }}
+  interface {{ ansible_default_ipv4.interface }}
+  virtual_router_id {{ keepalived_virtual_id }}
+  priority {{ '100' if inventory_hostname in groups['keepalived_primary'] else '50' }}
+  advert_int 1
+  unicast_src_ip {{ ansible_default_ipv4.address }}
+
+  unicast_peer {
+{% for h in ansible_play_hosts | difference([inventory_hostname]) %}
+    {{ hostvars[h].ansible_default_ipv4.address }}
+{% endfor %}
+  }
+
+  authentication {
+    auth_type PASS
+    auth_pass {{ keepalived_password }}
+  }
+
+  virtual_ipaddress {
+    {{ keepalived_vip }}
+  }
+}

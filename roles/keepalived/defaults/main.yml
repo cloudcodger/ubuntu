@@ -1,0 +1,6 @@
+---
+keepalived_password: "{{ lookup('ansible.builtin.password',
+  '/dev/null', length=8, seed=keepalived_vip,
+  chars=['ascii_letters', 'digits']) }}"
+keepalived_vip: "x"
+keepalived_virtual_id: "{{ keepalived_vip.split('.')[3] }}"

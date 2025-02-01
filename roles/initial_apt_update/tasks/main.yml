@@ -13,7 +13,7 @@
   ansible.builtin.apt:
     update_cache: true
     upgrade: dist
-  when: first_run_reboot_flag.changed
+  when: first_run_reboot_flag.changed # noqa: no-handler
 
 - name: Check if a reboot is required.
   ansible.builtin.stat:

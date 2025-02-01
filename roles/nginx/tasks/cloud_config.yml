@@ -1,0 +1,47 @@
+---
+- name: Validate Cloud config required values.
+  ansible.builtin.assert:
+    that:
+      - nginx_config.name is defined
+      - nginx_config.name | length > 1
+      - nginx_config.server_name is defined
+      - nginx_config.server_name | length > 1
+    quiet: true
+
+- name: Create the Cloud config site root data directory.
+  ansible.builtin.file:
+    path: "{{ nginx_config.root | default(nginx_base + '/' + nginx_config.name) }}"
+    state: directory
+    mode: "0755"
+
+- name: Create the Cloud config site internal only index file.
+  ansible.builtin.template:
+    dest: "{{ nginx_config.root | default(nginx_base + '/' + nginx_config.name) }}/index.html"
+    src: internal_only_index.html.j2
+    mode: "0644"
+
+- name: Create the Cloud config site meta-data file.
+  ansible.builtin.template:
+    dest: "{{ nginx_config.root | default(nginx_base + '/' + nginx_config.name) }}/meta-data"
+    src: cloud-config-meta-data.j2
+    mode: "0644"
+
+- name: Create the Cloud config site user-data file.
+  ansible.builtin.template:
+    dest: "{{ nginx_config.root | default(nginx_base + '/' + nginx_config.name) }}/user-data"
+    src: cloud-config-user-data.j2
+    mode: "0644"
+
+- name: Create the Cloud config site.
+  ansible.builtin.template:
+    dest: "/etc/nginx/sites-available/{{ nginx_config.name }}"
+    src: cloud-config-site.j2
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Enable the Cloud config site.
+  ansible.builtin.file:
+    dest: "/etc/nginx/sites-enabled/{{ nginx_config.name }}"
+    src: "../sites-available/{{ nginx_config.name }}"
+    state: link
+  notify: Reload nginx

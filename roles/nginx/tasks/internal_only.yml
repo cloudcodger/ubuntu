@@ -1,0 +1,27 @@
+---
+- name: Create the root directory for the internal only site.
+  ansible.builtin.file:
+    path: "{{ nginx_base }}/{{ inventory_hostname }}"
+    state: directory
+    mode: "0755"
+
+- name: Create the index.html for the default site [internal user only].
+  ansible.builtin.template:
+    dest: "{{ nginx_base }}/{{ inventory_hostname }}/index.html"
+    src: internal_only_index.html.j2
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Add internal only site.
+  ansible.builtin.template:
+    dest: "/etc/nginx/sites-available/{{ inventory_hostname }}"
+    src: internal_site.j2
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Enable internal only site.
+  ansible.builtin.file:
+    dest: "/etc/nginx/sites-enabled/{{ inventory_hostname }}"
+    src: "../sites-available/{{ inventory_hostname }}"
+    state: link
+  notify: Reload nginx

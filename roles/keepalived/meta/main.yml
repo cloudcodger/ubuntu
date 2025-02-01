@@ -1,0 +1,15 @@
+galaxy_info:
+  author: Cloud Codger
+  description: Install and configure 'keepalived'.
+  license: GPL-2.0-or-later
+  min_ansible_version: '2.10'
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - noble
+
+  galaxy_tags:
+    - infrastructure
+
+dependencies: []

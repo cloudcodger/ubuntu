@@ -1,0 +1,9 @@
+server {
+	listen 80{{ ' default_server' if nginx_config.default is defined and nginx_config.default }};
+	listen [::]:80{{ ' default_server' if nginx_config.default is defined and nginx_config.default }};
+
+	root {{ nginx_config.root | default(nginx_base + '/' + nginx_config.name) }};
+	index {{ nginx_config.index | default('index.html') }};
+
+	server_name {{  nginx_config.server_name }};
+}

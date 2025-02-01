@@ -1,0 +1,35 @@
+---
+- name: Make sure there is one and only one host in the 'keepalived_primary' group.
+  ansible.builtin.assert:
+    that:
+      - groups['keepalived_primary'] is defined
+      - groups['keepalived_primary'] | length == 1
+    quiet: true
+
+- name: Make sure there is more than one host being configured.
+  ansible.builtin.assert:
+    that: ansible_play_hosts | length > 1
+    quiet: true
+
+- name: Make sure the VIP is a valid IP address.
+  ansible.builtin.assert:
+    that: keepalived_vip | ansible.utils.ipaddr
+    quiet: true
+
+- name: Install 'keepalived' package.
+  ansible.builtin.apt:
+    pkg: keepalived
+    cache_valid_time: 3600
+
+- name: Create 'keepalived.conf'.
+  ansible.builtin.template:
+    dest: /etc/keepalived/keepalived.conf
+    src: keepalived.conf.j2
+    mode: "0644"
+  notify: Restart keepalived
+
+- name: Enable and start keepalived.
+  ansible.builtin.systemd:
+    name: keepalived
+    enabled: true
+    state: started

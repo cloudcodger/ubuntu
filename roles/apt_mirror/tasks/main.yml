@@ -30,6 +30,7 @@
   ansible.builtin.template:
     src: mirror.list.j2
     dest: /etc/apt/mirror.list
+    mode: "0644"
 
 - name: Install the patched apt-mirror perl script.
   ansible.builtin.copy:
@@ -56,6 +57,7 @@
   ansible.builtin.file:
     path: "{{ apt_mirror_nginx_server_root }}/{{ item }}"
     state: absent
+    mode: "0644"
   loop: "{{ apt_mirror_nginx_default_indexes }}"
   when: apt_mirror_nginx_disable_defaults
 
@@ -63,11 +65,13 @@
   ansible.builtin.template:
     dest: /var/www/html/index.html
     src: index.html.j2
+    mode: "0644"
 
 - name: Add NGINX apt-mirror site.
   ansible.builtin.template:
     dest: "/etc/nginx/sites-available/{{ apt_mirror_nginx_site_name }}"
     src: site_config.j2
+    mode: "0644"
   notify: Reload nginx
   when: apt_mirror_nginx_add_site
 

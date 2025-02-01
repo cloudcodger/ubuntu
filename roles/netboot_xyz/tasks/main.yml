@@ -9,4 +9,5 @@
   ansible.builtin.get_url:
     url: "{{ item.url }}"
     dest: "{{ netboot_xyz_tftp_base_dir }}/{{ item.name }}"
+    mode: "0644"
   loop: "{{ netboot_xyz_files }}"

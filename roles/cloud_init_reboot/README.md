@@ -3,7 +3,7 @@ Role `cloud_init_reboot`
 
 Check for the completion of Cloud-Init and reboot the system if required.
 
-After the first boot of a system configured using Cloud-Init, there is a one time execution of the equivelant to what `apt-get upgrade` does. It does not however reboot the system when it is required from upgrading packages.
+After the first boot of a system configured using Cloud-Init, the cloud-init performs a one time execution of the equivelant to what `apt-get upgrade` does. It does not however reboot the system when it is required from upgrading packages.
 
 Using a flag file to make sure the reboot is only performed on the first execution of the role. This waits for the Cloud-Init process to complete (which can take a whiile on that first boot), then checks for `/var/run/reboot-required` and reboots the system when the file exists.
 

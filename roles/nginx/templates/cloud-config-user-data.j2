@@ -1,0 +1,46 @@
+#cloud-config
+
+autoinstall:
+  apt:
+    preserve_sources_list: false
+    primary:
+    - arches: [default]
+{% if nginx_config.uri is defined %}
+      uri: {{ nginx_config.uri }}
+{% elif ansible_architecture == 'arm64' %}
+      uri: 'http://ports.ubuntu.com/ubuntu-ports'
+{% else %}
+      uri: 'http://archive.ubuntu.com/ubuntu'
+{% endif %}
+  identity:
+    hostname: {{ nginx_config.hostname | default('ubuntu-generic') }}
+    username: {{ nginx_config.user | default('ubuntu') }}
+    realname: {{ nginx_config.user_full_name | default('Ubuntu') }}
+    password: {{ nginx_config.password | default('$6$0ZJda82K$ZzRC0wUirmVprhZgDKGEpu6JJjhS0O3mZfBDqboF0J9OLQlQz//peNZtrPRvcGFCBz6QhUREiGOOngIFjsoAt1 # change-me') }}
+  locale: {{ nginx_config.locale | default('en_US') }}
+  network:
+{{ nginx_user_data_network | indent(4,true) }}
+{% if nginx_user_data_packages %}
+  packages:
+{{ nginx_user_data_packages | indent(4,true) }}
+{% endif %}
+  ssh:
+    allow-pw: {{ 'true' if nginx_user_data_ssh_allow_pw else 'false' }}
+{% if nginx_user_data_ssh_authorized_keys %}
+    authorized-keys:
+{{ nginx_user_data_ssh_authorized_keys | indent(6,true) }}
+{% endif %}
+    install-server: true
+  storage:
+    config:
+{{ nginx_user_data_storage_config | indent(6,true) }}
+
+{% if nginx_user_data %}
+  user_data:
+{{ nginx_user_data | to_yaml(indent=4) | indent(4,true) }}
+{% endif %}
+{% if nginx_user_data_late_commands %}
+  late-commands:
+{{ nginx_user_data_late_commands | indent(4,true) }}
+{% endif %}
+  version: 1

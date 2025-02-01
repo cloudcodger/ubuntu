@@ -4,7 +4,7 @@
 apt_mirror_base_path: /apt-mirror
 apt_mirror_install_patched_executable: false
 apt_mirror_nginx_add_site: false
-apt_mirror_nginx_default_indexes: [ index.nginx-debian.html ]
+apt_mirror_nginx_default_indexes: [index.nginx-debian.html]
 apt_mirror_nginx_default_server: true
 apt_mirror_nginx_disable_defaults: false
 apt_mirror_nginx_server_index: "index.html index.htm"
@@ -15,15 +15,29 @@ apt_mirror_nthreads: 40
 
 apt_mirror_list:
   - "# Ubuntu 22.04"
-  - "deb-amd64 http://us.archive.ubuntu.com/ubuntu jammy main/debian-installer main restricted universe multiverse"
-  - "deb-amd64 http://us.archive.ubuntu.com/ubuntu jammy-backports main/debian-installer main restricted universe multiverse"
-  - "deb-amd64 http://us.archive.ubuntu.com/ubuntu jammy-security main/debian-installer main restricted universe multiverse"
-  - "deb-amd64 http://us.archive.ubuntu.com/ubuntu jammy-updates main/debian-installer main restricted universe multiverse"
-  - "deb-arm64 http://ports.ubuntu.com/ubuntu-ports jammy main/debian-installer main restricted universe multiverse"
-  - "deb-arm64 http://ports.ubuntu.com/ubuntu-ports jammy-security main/debian-installer main restricted universe multiverse"
-  - "deb-arm64 http://ports.ubuntu.com/ubuntu-ports jammy-updates main/debian-installer main restricted universe multiverse"
+  - >-
+    deb-amd64 http://us.archive.ubuntu.com/ubuntu
+    jammy main/debian-installer main restricted universe multiverse
+  - >-
+    deb-amd64 http://us.archive.ubuntu.com/ubuntu
+    jammy-backports main/debian-installer main restricted universe multiverse
+  - >-
+    deb-amd64 http://us.archive.ubuntu.com/ubuntu
+    jammy-security main/debian-installer main restricted universe multiverse
+  - >-
+    deb-amd64 http://us.archive.ubuntu.com/ubuntu
+    jammy-updates main/debian-installer main restricted universe multiverse
+  - >-
+    deb-arm64 http://ports.ubuntu.com/ubuntu-ports
+    jammy main/debian-installer main restricted universe multiverse
+  - >-
+    deb-arm64 http://ports.ubuntu.com/ubuntu-ports
+    jammy-security main/debian-installer main restricted universe multiverse
+  - >-
+    deb-arm64 http://ports.ubuntu.com/ubuntu-ports
+    jammy-updates main/debian-installer main restricted universe multiverse
   - ""
-  - "clean http://us.archive.ubuntu.com/ubuntu"
+  - clean http://us.archive.ubuntu.com/ubuntu
 
 apt_mirror_nginx_locations:
   - name: /ubuntu

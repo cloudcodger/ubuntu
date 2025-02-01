@@ -1,0 +1,6 @@
+---
+minio_data_dir: /data/minio
+minio_opts: "--console-address :9001"
+minio_root_user: admin
+minio_root_password: ""
+minio_volumes: "http://dogchow{1...3}.lab.codger.site:9000/data/minio"
