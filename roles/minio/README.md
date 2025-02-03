@@ -1,38 +1,65 @@
-Role Name
-=========
+Role `minio`
+============
 
-A brief description of the role goes here.
+Install [MinIO](https://min.io/) on servers and configure it.
+
+The recommendation is to place the data directory on XFS formatted file systems. This role can take a device name and make sure it is formatted as XFS and mounted on `/data`.
 
 Requirements
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+Either `minio_volume_hosts` or `minio_volumes` must be specified.
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+- `minio_data_base_dir`
+  - The base directory under which the data directory will be created.
+  - Default: `/data`.
+- `minio_data_dir`
+  - The data directory.
+  - Default: `"{{ minio_data_base_dir }}/minio"`.
+- `minio_data_drive`
+  - An optional disk drive (for example: `/dev/sdb`) to be formatted as an XFS filesystem and mounted at `minio_data_base_dir`.
+- `minio_opts`
+  - The `defaults` value for MINIO_OPTS.
+  - Explicitly sets the MinIO Console listen address to port `9001` on all network interfaces.
+  - (default: `"--console-address :9001"`).
+- `minio_root_user`
+  - The `defaults` value for MINIO_ROOT_USER.
+  - Default: `admin`.
+- `minio_system_user`
+  - The Linux system user for MinIO.
+  - Default: `minio-user`.
+- `minio_volume_hosts`
+  - The host portion of `minio_volumes`.
+  - Must be specified if `minio_volumes` was not.
+  - Example: `minio{1...3}.example.com`.
+  - Default: none.
+- `minio_volumes`
+  - The `defaults` value for MINIO_VOLUMES.
+  - Must be specified if `minio_volume_hosts` was not.
+  - Default: `http://{{ minio_volume_hosts }}:9000/data/minio`.
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+No special dependencies.
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+```yml
+---
+- name: Install MinIO and configure it.
+  become: true
+  hosts: minio_servers
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+  vars:
+    minio_data_drive: /dev/sdb
+    minio_root_password: "{{ lookup('file', '~/.secrets/minio/root_password') }}"
+    minio_volume_hosts: "minio{1..3}.example.com"
 
-License
--------
-
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+  roles:
+    - role: cloudcodger.ubuntu.keepalived
+```

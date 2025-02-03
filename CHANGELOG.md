@@ -1,5 +1,9 @@
 # Change log
 
+# version 1.1.1
+
+- Fixed incomlpete `minio` role
+
 # version 1.1.0
 
 - Added the `keepalived` role

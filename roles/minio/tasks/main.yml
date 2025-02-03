@@ -1,13 +1,37 @@
 ---
+- name: Make sure a root password was supplied.
+  ansible.builtin.assert:
+    that: minio_root_password | length > 1
+    quiet: true
+
+- name: Make sure Volumes was set.
+  ansible.builtin.assert:
+    that: '"://:9000/" not in minio_volumes'
+    quiet: true
+
+- name: Create filesystem and mount it.
+  when: minio_data_drive | length > 1
+  block:
+    - name: Create an xfs filesystem on minio data drive.
+      community.general.filesystem:
+        fstype: xfs
+        state: present
+        opts: "-L MINIO"
+        dev: "{{ minio_data_drive }}"
+
+    - name: Mount the minio data drive by UUID.
+      ansible.posix.mount:
+        path: "{{ minio_data_base_dir }}"
+        src: LABEL=MINIO
+        fstype: xfs
+        opts: defaults
+        state: mounted
+
 - name: Create the minio-user.
   ansible.builtin.user:
-    name: minio-user
+    name: "{{ minio_system_user }}"
+    system: true
     create_home: true
-
-- name: Get and install the minio executable.
-  ansible.builtin.apt:
-    deb: https://dl.min.io/server/minio/release/linux-amd64/archive/minio.deb
-  notify: Restart minio
 
 - name: Create the minio data directory.
   ansible.builtin.file:
@@ -17,14 +41,19 @@
     group: minio-user
     mode: "0755"
 
-- name: Create the loadbalancer site.
+- name: Get and install the minio executable.
+  ansible.builtin.apt:
+    deb: https://dl.min.io/server/minio/release/linux-amd64/archive/minio.deb
+  notify: Restart minio
+
+- name: Create the defaults file.
   ansible.builtin.template:
     dest: /etc/default/minio
     src: minio_defaults.j2
     mode: "0644"
   notify: Restart minio
 
-- name: Enable start the minio service.
+- name: Enable and start the minio service.
   ansible.builtin.service:
     name: minio
     enabled: true
