@@ -24,6 +24,8 @@ nginx_internal_site_server_name: _ # catch-all server
 
 nginx_balancer_sites: []
 
+nginx_custom_sites: []
+
 nginx_user_data_storage_config: |-
   - {id: disk-sda, type: disk, ptable: gpt, wipe: superblock, grub_device: true}
 

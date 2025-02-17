@@ -1,0 +1,21 @@
+{% for upstream in nginx_custom.upstreams | default([]) %}
+upstream {{ upstream.name }} {
+{%   for line in upstream.contents.splitlines() %}
+	{{ line }}
+{%   endfor %}
+}
+
+{% endfor %}
+server {
+{% for line in (nginx_custom.directives | default("")).splitlines() %}
+	{{ line }}
+{% endfor %}
+{% for location in nginx_custom.locations %}
+
+	location "{{ location.uri | default('/')}}" {
+{%   for line in location.contents.splitlines() | default([]) %}
+		{{ line }}
+{%   endfor %}
+	}
+{% endfor %}
+}

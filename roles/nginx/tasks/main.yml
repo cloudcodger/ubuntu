@@ -27,6 +27,15 @@
   ansible.builtin.include_tasks: 'internal_only.yml'
   when: nginx_internal_site_apply
 
+# The default for nginx_custom_sites is an empty list for the loop
+# and the tasks would not get included.
+- name: Include the custom tasks.
+  ansible.builtin.include_tasks: 'custom.yml'
+  loop: "{{ nginx_custom_sites }}"
+  loop_control:
+    label: "{{ nginx_custom.name }}"
+    loop_var: nginx_custom
+
 # The default for nginx_balancer_sites is an empty list for the loop
 # and the tasks would not get included.
 - name: Include the balancer tasks.

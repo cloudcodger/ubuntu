@@ -13,6 +13,9 @@ Either `minio_volume_hosts` or `minio_volumes` must be specified.
 Role Variables
 --------------
 
+- `minio_browser_redirect_url`
+  - Add a FQDN for the web browser automatic redirect to the console address.
+  - Default: `""` (left out of config).
 - `minio_data_base_dir`
   - The base directory under which the data directory will be created.
   - Default: `/data`.

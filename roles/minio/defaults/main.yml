@@ -1,4 +1,5 @@
 ---
+minio_browser_redirect_url: "" # Example: http://miniolb/minio/ui/
 minio_data_base_dir: /data
 minio_data_dir: "{{ minio_data_base_dir }}/minio"
 minio_data_drive: ""

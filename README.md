@@ -12,6 +12,7 @@ See the individual `README.md` files under each role for more information.
 - `cloud_init_reboot` - Use with Cloud-Init systems for an initial reboot.
 - `initial_apt_update` - Performs an initial `apt-get upgrade` and reboot.
 - `keepalived` - Install and configure `keepalived`.
+- `minio` - Install and configure [MinIO](https://min.io/).
 - `netboot_xyz` - Configure a system to be a TFTP server with netboot.xyz files.
 - `nginx` - Install NGINX and configure it for various purposes.
 

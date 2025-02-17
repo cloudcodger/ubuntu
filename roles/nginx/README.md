@@ -5,6 +5,7 @@ Install NGINX and configure it from the following optional items.
 
 - Disable the `default` site, installed with the package
 - Internal Only site
+- Custom sites
 - Load Balancer sites
 - Cloud-Config sites
 
@@ -37,15 +38,41 @@ Internal Site Variables
 - `nginx_internal_site_server_index` - the value for `index` in the site file (default: `"index.html index.htm"`).
 - `nginx_internal_site_server_name` - the value for `server_name` in the site file (default: `_`, which is the catch-all server).
 
-Load Balancer
-=============
+Custom Sites
+============
 
-The role can create load balancer sites for NGINX to be configured as a reverse proxy.
+For creating custom sites that contain a single `server` directive. The expectation is that every site file will only contain one `server` section and multiple sites will be used otherwise.
+
+Unlike some other parts of this role, the `server` does not include a `listen` or `server_name` and these need to be included in the `directives`.
+
+Custom Variables
+----------------
+
+- `nginx_custom_sites` - a list of custom sites to create (default: `[]`).
+
+Each list item must contain the following keys:
+
+- `name` - the site name.
+- `directives` - a multi-line string of the lines for the `server` level settings.
+- `locations` - a list of `location` sections.
+  - `uri` - the uri for the location (default: `/`).
+  - `contents` - a multi-line string of the lines for the `location`.
+
+Each list item may contain the following optinonal keys:
+
+- `upstreams` - a list of `upstream` sections.
+  - `name` - required for each upstream.
+  - `contents` - a multi-line string of the lines for the `upstream`.
+
+Load Balancer Sites
+===================
+
+The role can create load balancer sites for NGINX to be configured as a reverse proxy. This only configures one `location /` and may not work for more complex site configurations.
 
 Load Balancer Variables
 -----------------------
 
-- `nginx_balancer_sites` - a list of load balancer sites to create (default: `[]`)
+- `nginx_balancer_sites` - a list of load balancer sites to create (default: `[]`).
 
 Each list item must contain the following keys:
 
@@ -94,9 +121,8 @@ Example Playbook
 ```yml
 ---
 - name: |
-    Install NGINX, remove the default site,
-    configure reverse proxy load balancers for
-    loki, mimir, minio, and minio-ui.
+    Install NGINX, remove the default site and configure
+    reverse proxy load balancers for loki, and mimir.
   become: true
   hosts: nginx_servers # must be two hosts with one in the `keepalived_primary` group.
 
@@ -130,39 +156,84 @@ Example Playbook
           - X-Real-IP $remote_addr
         listen_port: "9009"
         server_name: "_"
-      - name: minio
-        backends:
-          - "backend1:9000"
-          - "backend2:9000"
-          - "backend3:9000"
-        disable_chunked_encoding: true
-        headers:
-          - 'Connection ""'
-          - Host $http_host
-          - X-Forwarded-For $proxy_add_x_forwarded_for
-          - X-Forwarded-Proto $scheme
-          - X-Real-IP $remote_addr
-        http_version: "1.1"
-        listen_port: "9000"
-        server_name: "_"
-      - name: minio-ui
-        backends:
-          - "backend1:9001"
-          - "backend2:9001"
-          - "backend3:9001"
-        disable_chunked_encoding: true
-        headers:
-          - 'Connection ""'
-          - Host $http_host
-          - X-Forwarded-For $proxy_add_x_forwarded_for
-          - X-Forwarded-Proto $scheme
-          - X-Real-IP $remote_addr
-        http_version: "1.1"
-        listen_port: "9001"
-        server_name: "_"
 
   roles:
     - role: cloudcodger.ubuntu.nginx
+```
+
+```yml
+---
+- name: |
+    Install NGINX and configure it using 'custom_sites' as a reverse
+    proxy load balancer for MinIO and the MinIO UI.
+
+  roles:
+    - role: cloudcodger.ubuntu.nginx
+      nginx_custom_sites:
+        - name: minio
+          directives: |
+            listen 80 default_server;
+            listen [::]:80 default_server;
+            server_name "_";
+
+            # Allow special characters in headers
+            ignore_invalid_headers off;
+            # Allow any size file to be uploaded.
+            # Set to a value such as 1000m; to restrict file size to a specific value
+            client_max_body_size 0;
+            # Disable buffering
+            proxy_buffering off;
+            proxy_request_buffering off;
+          upstreams:
+            - name: minio_s3
+              contents: |
+                least_conn;
+                server minio1:9000;
+                server minio2:9000;
+                server minio3:9000;
+            - name: minio_console
+              contents: |
+                least_conn;
+                server minio1:9001;
+                server minio2:9001;
+                server minio3:9001;
+          locations:
+            - contents: |
+                proxy_set_header Host $http_host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+
+                proxy_connect_timeout 300;
+                # Default is HTTP/1, keepalive is only enabled in HTTP/1.1
+                proxy_http_version 1.1;
+                proxy_set_header Connection "";
+                chunked_transfer_encoding off;
+
+                proxy_pass http://minio_s3; # This uses the upstream directive definition to load balance
+            - uri: /minio/ui/
+              contents: |
+                rewrite ^/minio/ui/(.*) /$1 break;
+                proxy_set_header Host $http_host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_set_header X-NginX-Proxy true;
+
+                # This is necessary to pass the correct IP to be hashed
+                real_ip_header X-Real-IP;
+
+                proxy_connect_timeout 300;
+
+                # To support websockets in MinIO versions released after January 2023
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+
+                chunked_transfer_encoding off;
+
+                proxy_pass http://minio_console; # This uses the upstream directive definition to load balance
+
 ```
 
 ```yml
@@ -172,21 +243,19 @@ Example Playbook
     for an Ubuntu Unattended Install.
     Overriding the URI for the jammy site.
 
-  vars:
-    nginx_cloud_config_sites:
-      - name: focal
-        server_name: prime20 prime20.lab.codger.site
-      - name: jammy
-        server_name: prime22 prime22.lab.codger.site
-        uri: http://prime7/ubuntu
-    nginx_user_data_ssh_authorized_keys: |-
-      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJwg1ybdTSPF2xFm+TS3bjelKO7VQgGpbyvr+b9qJBzr cloudcodger@showcase
-      - {{ lookup('file', lookup('env', 'HOME') + '/.ssh/showcase.pub') }}
-    nginx_cloud_conf_user_data_packages: |-
-      - htop
-      - tcpdump
-      - top
-
   roles:
     - role: cloudcodger.ubuntu.nginx
+      nginx_cloud_config_sites:
+        - name: focal
+          server_name: prime20 prime20.lab.codger.site
+        - name: jammy
+          server_name: prime22 prime22.lab.codger.site
+          uri: http://prime7/ubuntu
+      nginx_user_data_ssh_authorized_keys: |-
+        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJwg1ybdTSPF2xFm+TS3bjelKO7VQgGpbyvr+b9qJBzr cloudcodger@showcase
+        - {{ lookup('file', lookup('env', 'HOME') + '/.ssh/showcase.pub') }}
+      nginx_cloud_conf_user_data_packages: |-
+        - htop
+        - tcpdump
+        - top
 ```
