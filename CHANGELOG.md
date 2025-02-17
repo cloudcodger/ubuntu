@@ -1,5 +1,9 @@
 # Change log
 
+# version 1.2.1
+
+- Fixed `keepalived` to allow multiple hosts in the `keepalived_primary` group as long as only one of them is in the `ansible_play_hosts`.
+
 # version 1.2.0
 
 - Added `nginx_custom_sites` to the `nginx` role

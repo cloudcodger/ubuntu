@@ -1,9 +1,9 @@
 ---
-- name: Make sure there is one and only one host in the 'keepalived_primary' group.
+- name: Make sure there is one and only one play host in the 'keepalived_primary' group.
   ansible.builtin.assert:
     that:
       - groups['keepalived_primary'] is defined
-      - groups['keepalived_primary'] | length == 1
+      - ansible_play_hosts | intersect(groups['keepalived_primary']) | length == 1
     quiet: true
 
 - name: Make sure there is more than one host being configured.
